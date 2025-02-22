@@ -5,11 +5,32 @@ on:
     tags:
       - "auto-deploy/v*"
 
+env:
+  PROJECT_PATH: "Auto/Auto.csproj"
+
 jobs:
   deploy:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - name: Install dependencies
+        run: dotnet restore ${{ env.PROJECT_PATH }}
+      - name: Build
+        run: dotnet build ${{ env.PROJECT_PATH }}
+
+      - name: Build for release and Publish
+        run: dotnet publish ${{ env.PROJECT_PATH }} -c Release --self-contained -r win-x64 -p:PublishSingleFile=true -o publish
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Auto
+          path: .\publish
 
       - name: Create Release
         uses: ncipollo/release-action@v1.16.0
@@ -20,3 +41,8 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
           
+      - uses: csexton/release-asset-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: Auto/bin/Release/net9.0/win-x64/publish/*.exe
+          release-url: ${{ steps.create_release.outputs.upload_url }}
