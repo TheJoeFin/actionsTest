@@ -45,5 +45,5 @@ jobs:
       - uses: csexton/release-asset-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          pattern: 'Auto/bin/Release/net9.0/publish/*'
+          pattern: './publish/*'
           release-url: ${{ steps.create_release.outputs.upload_url }}
